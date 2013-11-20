@@ -13,7 +13,7 @@ window.onload = function() {
 //                this.add(new Sticker({'content': 'cash a check'}));
 //                this.add(new Sticker({'content': 'buy a christmas tree'}));
 //                this.add(new Sticker({'content': 'go to the hospital'}));
-//                this.add(new Sticker({'content': 'return the book'}));
+//                this.add(new Sticker({'content': 'return the book', coords:{'top': 100, 'left': 100}}));
 //                this.add(new Sticker({'content': 'buy napalm'}));
 //                this.add(new Sticker({'content': 'capture the world'}));
             }
@@ -22,6 +22,7 @@ window.onload = function() {
         StickerView = Backbone.View.extend({
             tagName: 'div',
             className: "sticker-abs",
+            in_container: true,
             template: _.template('<%= content %><br/>top: <%= coords.top%> left: <%= coords.left%>'),
             initialize: function() {
                 this.sticker_edit_form = new StickerEditView();
@@ -76,17 +77,43 @@ window.onload = function() {
                     view.model.set('coords', {top: e.pageY - shiftY,
                                             left: e.pageX - shiftX});
                 }
-
                 document.onmousemove = function(e) {
+                    var in_cont = view.isOutOfContainer(e);
                     e = fixEvent(e);
                     moveAt(e);
+                    if(in_cont !== view.in_container) {
+                        view.in_container = in_cont;
+                        view.$el.toggleClass('out');
+                    }
                 };
 
                 //drop
                 this.el.onmouseup = function() {
-                    opasity(self, {start: 0.6, end: 1, time: 100});
+                    var destroy = function() {
+                        view.model.destroy();
+                        view.remove();
+                    };
+                    if(!view.in_container) {
+                        opasity(self, {start: 0.6, end: 0, time: 800}, destroy);
+                    } else {
+                        opasity(self, {start: 0.6, end: 1, time: 100});
+                    }
                     document.onmousemove = self.onmouseup = null;
                 };
+            },
+            isOutOfContainer: function(e) {
+                var result = false,
+                    cont_borders = this.model.get('container_size'),
+                    pos_x = e.pageX,
+                    pos_y = e.pageY;
+                //console.log(cont_borders, pos_x, pos_y);
+                if((pos_x >= cont_borders.left && pos_x <= cont_borders.right) &&
+                    (pos_y >= cont_borders.top && pos_y <= cont_borders.bottom)) {
+                    result = true;
+                } else {
+                    result = false;
+                }
+                return result;
             }
         }),
 
@@ -104,11 +131,8 @@ window.onload = function() {
                 this.$el.html(""); //зачищает форму
             },
             render: function() {
-                this.$el.css({"position": "absolute",
-                    "left": this.coords.left + "px",
-                    "top": this.coords.top + "px",
-                    "background-color": "#adff2f",
-                    "zIndex": "1000"});
+                this.$el.css({"left": this.coords.left + "px",
+                                "top": this.coords.top + "px"});
 
                 this.$el.html(this.template(this.model.toJSON())); //отображение с шаблона
                 //вставка прошлого значения в поле формы
@@ -143,11 +167,8 @@ window.onload = function() {
                 this.$el.html("");
             },
             render: function() {
-                this.$el.css({"position": "absolute",
-                            "left": this.coords.left + "px",
-                            "top": this.coords.top + "px",
-                            "background-color": "#adff2f",
-                            "zIndex": "1000"});
+                this.$el.css({"left": this.coords.left + "px",
+                            "top": this.coords.top + "px"});
                 this.$el.html(this.template());
 				return this;
             }
@@ -159,10 +180,16 @@ window.onload = function() {
                 this.sticker_add_form = new StickerAddView();
                 this.sticker_add_form.collection_view = this;
 				this.collection.on('add', this.render, this);
+
+                this.getSize();
             },
             el: $('#container'),
-            events: {'click': 'newStickerForm',
-                     'contextmenu': 'render'},
+            events: {'click': 'newStickerForm'},
+            getSize: function() {
+                this.coords = getCoords(this.el);
+                this.coords.bottom = this.el.clientHeight + this.coords.top;
+                this.coords.right = this.el.clientWidth + this.coords.left;
+            },
             render: function() {
                 event.preventDefault();
                 this.$el.html("");
@@ -170,9 +197,11 @@ window.onload = function() {
 				return this;
             },
             addOneSticker: function(model) {
+                model.set({'container_size': this.coords});
                 var view = new StickerView({
                     "model": model
                 });
+
                 this.$el.append(view.render().el);
             },
             newStickerForm: function(event) {
@@ -239,7 +268,7 @@ function getCoords(elem) {
     return { top: Math.round(top), left: Math.round(left) };
 }
 
-function opasity(element, param_obj) {
+function opasity(element, param_obj, endCallback) {
     if(param_obj.start > 1 && param_obj.end > 1) {
         param_obj.start /= 100;
         param_obj.end /= 100;
@@ -249,6 +278,8 @@ function opasity(element, param_obj) {
         delta_opasity = 0.01,
         delta_time = Math.abs(Math.round(param_obj.time / ((param_obj.end - param_obj.start) / delta_opasity))),
         timer_handler;
+
+    endCallback = endCallback || function() {};
 
     element.style.opacity = param_obj.start;
     element.style.filter='alpha(opacity='+param_obj.start*100+')';
@@ -261,10 +292,12 @@ function opasity(element, param_obj) {
         if(appear_disappear) {
             if(curent_opasity >= param_obj.end) {
                 clearInterval(timer_handler);
+                endCallback();
             }
         } else {
             if(curent_opasity <= param_obj.end) {
                 clearInterval(timer_handler);
+                endCallback();
             }
         }
     }, delta_time);

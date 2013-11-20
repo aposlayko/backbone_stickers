@@ -28,3 +28,11 @@ body{
     border: 1px black solid;
     background: #f4a460;
 }
+.form{
+    background: #adff2f;
+    position: absolute;
+    z-index: 1000;
+}
+.out{
+    border: 5px red solid;
+}
