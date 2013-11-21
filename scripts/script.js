@@ -21,9 +21,9 @@ window.onload = function() {
 
         StickerView = Backbone.View.extend({
             tagName: 'div',
-            className: "sticker-abs",
+            className: "sticker-abs1",
             in_container: true,
-            template: _.template('<%= content %><br/>top: <%= coords.top%> left: <%= coords.left%>'),
+            template: _.template('<div class="st-cont"><%= content %><br/>top: <%= coords.top%> left: <%= coords.left%></div>'),
             initialize: function() {
                 this.sticker_edit_form = new StickerEditView();
 				this.model.on('change', this.render, this);
@@ -94,7 +94,7 @@ window.onload = function() {
                         view.remove();
                     };
                     if(!view.in_container) {
-                        opasity(self, {start: 0.6, end: 0, time: 800}, destroy);
+                        opasity(self, {start: 0.6, end: 0, time: 400}, destroy);
                     } else {
                         opasity(self, {start: 0.6, end: 1, time: 100});
                     }

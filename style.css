@@ -4,8 +4,8 @@ body{
 }
 
 #container{
-    width: 700px;
-    height: 400px;
+    width: 1000px;
+    height: 700px;
     border: 1px black solid;
 }
 .sticker {
@@ -14,25 +14,31 @@ body{
     text-align: center;
 
     width: 200px;
-    height: 100px;
-    border: 1px black solid;
+    height: 200px;
+    /*border: 1px black solid;*/
+    /*background: #f4a460;*/
 }
-.sticker-abs{
-    /*margin: 5px;*/
-    /*display: inline-block;*/
-    text-align: center;
+.sticker-abs1{
     position: absolute;
-
-    width: 200px;
-    height: 100px;
-    border: 1px black solid;
-    background: #f4a460;
+    width: 280px;
+    height: 280px;
+    background-image: url("img/hand_made.png");
 }
 .form{
-    background: #adff2f;
+    background: #fff800;
     position: absolute;
     z-index: 1000;
 }
 .out{
     border: 5px red solid;
+}
+.st-cont{
+    margin: 20px;
+    text-align: center;
+    font: italic bold 16px Verdana;
+    color: #007700;
+}
+.board{
+    background-image: url("img/nut_dark.jpg");
+    /*background-repeat: repeat;*/
 }
